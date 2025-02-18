@@ -72,4 +72,14 @@ public class AirQualityService {
 
         return sb.toString();
     }
+
+    //basic 을 개선 - RestTemplate
+    public String getAirQualityDataRest(String sidoName) throws IOException {
+        return null;
+    }
+
+    //RestTemplate 를 개선 - WebClient
+    public String getAirQualityDataReactive(String sidoName) throws IOException {
+        return null;
+    }
 }
