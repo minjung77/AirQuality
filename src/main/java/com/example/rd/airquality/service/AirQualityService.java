@@ -1,5 +1,6 @@
 package com.example.rd.airquality.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -11,36 +12,63 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 
+@Slf4j
 @Service
 public class AirQualityService {
-    //data.go.kr르ㅗ 부터 미세먼지 정보를 가져옴
-    public String getAirQualityDataBasic() throws IOException {
+
+    // API serviceKey 변수 선언
+    private String serviceKey;
+
+    //data.go.kr로 부터 미세먼지 정보를 가져옴
+    public String getAirQualityDataBasic(String sidoName) throws IOException {
+        serviceKey = System.getenv("app.serviceKey");
+
+        // API 요청을 위해 URL 구성
         StringBuilder urlBuilder = new StringBuilder("http://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty"); /*URL*/
-        urlBuilder.append("?" + URLEncoder.encode("serviceKey","UTF-8") + "=07Xx3pUEW8XevlbEabobg012avmzBBpkptWfX2Tt1kq0hMly8JfTdoT6VQzfCKDECL%2Fj4L%2Fbp25HrThtq3Cn%2BQ%3D%3D"); /*Service Key*/
-        urlBuilder.append("&" + URLEncoder.encode("returnType","UTF-8") + "=" + URLEncoder.encode("json", "UTF-8")); /*xml 또는 json*/
+        urlBuilder.append("?").append(URLEncoder.encode("serviceKey","UTF-8")).append("=").append(serviceKey); /*Service Key*/
+        urlBuilder.append("&").append(URLEncoder.encode("returnType","UTF-8")).append("=").append(URLEncoder.encode("json", "UTF-8")); /*xml 또는 json*/
         urlBuilder.append("&" + URLEncoder.encode("numOfRows","UTF-8") + "=" + URLEncoder.encode("100", "UTF-8")); /*한 페이지 결과 수*/
         urlBuilder.append("&" + URLEncoder.encode("pageNo","UTF-8") + "=" + URLEncoder.encode("1", "UTF-8")); /*페이지번호*/
-        urlBuilder.append("&" + URLEncoder.encode("sidoName","UTF-8") + "=" + URLEncoder.encode("서울", "UTF-8")); /*시도 이름(전국, 서울, 부산, 대구, 인천, 광주, 대전, 울산, 경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주, 세종)*/
+        urlBuilder.append("&" + URLEncoder.encode("sidoName","UTF-8") + "=" + URLEncoder.encode(sidoName, "UTF-8")); /*시도 이름(전국, 서울, 부산, 대구, 인천, 광주, 대전, 울산, 경기, 강원, 충북, 충남, 전북, 전남, 경북, 경남, 제주, 세종)*/
         urlBuilder.append("&" + URLEncoder.encode("ver","UTF-8") + "=" + URLEncoder.encode("1.0", "UTF-8")); /*버전별 상세 결과 참고*/
+
+        // HTTP 연결 후 응답코드 확인
         URL url = new URL(urlBuilder.toString());
+        
+        //http 형식을 만들어서 요청
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
         conn.setRequestProperty("Content-type", "application/json");
+
+        //요청에 대한 값 확인.(응답번호:200)
         System.out.println("Response code: " + conn.getResponseCode());
-        BufferedReader rd;
+        
+        // 응답코드가 200이라면 문자 스트링을 이용해서 데이터를 받아옴
+        BufferedReader rd;//버퍼 : 빠른 처리를 하기 위해
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() <= 300) {
+            //정상적으로 처리했을 경우에
             rd = new BufferedReader(new InputStreamReader(conn.getInputStream()));
         } else {
             rd = new BufferedReader(new InputStreamReader(conn.getErrorStream()));
         }
+        
+        // 버퍼에 저장된 데이터를 하나씩 꺼내 문자열 변수에 저장
         StringBuilder sb = new StringBuilder();
         String line;
         while ((line = rd.readLine()) != null) {
             sb.append(line);
         }
+        
+        //작업이 끝나면 버퍼 닫고, HTTP 연결 종료
         rd.close();
         conn.disconnect();
-        System.out.println(sb.toString());
+//        System.out.println(sb.toString());
+        log.info("apiURL : {}", url);//{} 안에 값이 들어감
+        log.info("jsonResponse : {}", sb);//log 사용하기 위해 lombok을 라이브러리에 추가
+//        log 를 사용하면 좋은 점이 문자열과 변수를 섞어서 사용 가능
+
+        // json 유효성 검사
+        // 지금 url 설정을 보면 서울만 인자로 넘어감. > 시 도 이름을 매개변수화 시켜서 넘어가게.
 
         return sb.toString();
     }

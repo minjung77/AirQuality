@@ -4,6 +4,7 @@ import com.example.rd.airquality.service.AirQualityService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,8 +21,8 @@ public class AirQualityController {
     }
 
     @GetMapping("/basic")
-    public String basic(Model moel) throws IOException {
-        String result = airQualityService.getAirQualityDataBasic();
+    public String basic(@RequestParam(defaultValue = "서울") String sidoName, Model moel) throws IOException {
+        String result = airQualityService.getAirQualityDataBasic(sidoName);
         moel.addAttribute("airQualityData", result);
         return "airQuality";
     }
